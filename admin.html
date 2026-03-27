@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Vidya Dental Clinic</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#f4f6f9;color:#1c1c1c;min-height:100vh}
+:root{
+  --ink:#0f1923;--ink2:#344150;--muted:#7a8a99;--rule:#e4e8ec;
+  --white:#fff;--bg:#f4f6f9;
+  --blue:#1a4b8c;--blue2:#2261b5;--blue-soft:#eef4fc;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --gray:#6b7280;--gray-bg:#f3f4f6;
+  --yellow:#b45309;--yellow-bg:#fef3c7;
+  --gold:#c9a84c;
+}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#0f1923 0%,#1a4b8c 60%,#2261b5 100%);padding:20px}
+.lc{background:var(--white);border-radius:6px;padding:52px 44px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.25)}
+.lc-logo{width:56px;height:56px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:1.5rem}
+.lc h1{font-family:'Cormorant Garamond',serif;color:var(--ink);font-size:1.7rem;font-weight:600;text-align:center;margin-bottom:4px}
+.lc-sub{font-size:.78rem;color:var(--muted);text-align:center;margin-bottom:30px;letter-spacing:.04em}
+.lc input{width:100%;border:1px solid var(--rule);border-radius:2px;padding:13px 14px;font-family:'Outfit',sans-serif;font-size:.93rem;color:var(--ink);outline:none;transition:all .2s;margin-bottom:14px}
+.lc input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,75,140,.08)}
+.lc-btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:2px;padding:14px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.lc-btn:hover{background:var(--ink)}
+.lc-err{color:var(--red);font-size:.82rem;text-align:center;margin-top:10px;min-height:18px}
+
+/* DASHBOARD */
+#adminScreen{display:none}
+header{background:var(--white);border-bottom:1px solid var(--rule);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 12px rgba(15,25,35,.06)}
+.hb{display:flex;align-items:center;gap:12px}
+.hlogo{width:36px;height:36px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.htitle{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;color:var(--ink);line-height:1}
+.hsub{font-size:.7rem;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.hr-btns{display:flex;gap:10px}
+.rbtn{background:var(--blue-soft);color:var(--blue);border:none;border-radius:2px;padding:8px 18px;font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.rbtn:hover{background:var(--blue);color:#fff}
+.lbtn{background:none;border:1px solid var(--rule);color:var(--muted);border-radius:2px;padding:8px 18px;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s}
+.lbtn:hover{border-color:var(--red);color:var(--red)}
+
+main{padding:28px;max-width:1300px;margin:0 auto}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px}
+.sc{background:var(--white);border-radius:4px;padding:22px 26px;border:1px solid var(--rule);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.sc.all::before{background:var(--blue)}
+.sc.pending::before{background:var(--yellow)}
+.sc.accepted::before{background:var(--green)}
+.sc.rejected::before{background:var(--red)}
+.sc-num{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;color:var(--ink);line-height:1}
+.sc-lbl{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:6px}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.ttitle{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--ink);flex:1;min-width:140px}
+.fb{padding:7px 18px;border-radius:2px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid var(--rule);background:var(--white);color:var(--muted);transition:all .2s;letter-spacing:.04em}
+.fb.active,.fb:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.si{border:1px solid var(--rule);border-radius:2px;padding:8px 14px;font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;transition:border .2s;min-width:200px;color:var(--ink);background:var(--white)}
+.si:focus{border-color:var(--blue)}
+
+/* TABLE */
+.tw{background:var(--white);border-radius:4px;border:1px solid var(--rule);overflow:hidden}
+.bt{width:100%;border-collapse:collapse}
+.bt th{background:var(--ink);color:rgba(255,255,255,.7);font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:14px 18px;text-align:left}
+.bt td{padding:14px 18px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
+.bt tr:last-child td{border-bottom:none}
+.bt tr:hover td{background:#f8faff}
+.pname{font-weight:600;color:var(--ink);font-size:.9rem}
+.pphone{color:var(--muted);font-size:.78rem;margin-top:2px}
+.dchip{background:var(--blue-soft);color:var(--blue);padding:4px 12px;border-radius:2px;font-size:.76rem;font-weight:600;display:inline-block}
+.tchip{color:var(--muted);font-size:.78rem;margin-top:4px}
+.rtxt{color:var(--muted);font-size:.82rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:2px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.bp{background:var(--yellow-bg);color:var(--yellow)}
+.ba{background:var(--green-bg);color:var(--green)}
+.br{background:var(--red-bg);color:var(--red)}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.ab{border:none;border-radius:2px;padding:7px 14px;font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;letter-spacing:.04em}
+.ab:hover{transform:translateY(-1px)}
+.accept{background:var(--green-bg);color:var(--green)}.accept:hover{background:var(--green);color:#fff}
+.reject{background:var(--red-bg);color:var(--red)}.reject:hover{background:var(--red);color:#fff}
+.del{background:var(--gray-bg);color:var(--gray)}.del:hover{background:var(--gray);color:#fff}
+.ab:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+.empty{text-align:center;padding:64px 20px}
+.empty .ei{font-size:3rem;margin-bottom:14px}
+.empty h3{font-family:'Cormorant Garamond',serif;color:var(--ink);font-size:1.4rem;margin-bottom:8px}
+.empty p{color:var(--muted);font-size:.88rem}
+.loading{text-align:center;padding:44px;color:var(--muted);font-size:.9rem}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--ink);color:#fff;padding:13px 22px;border-radius:3px;font-size:.85rem;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.2);transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){main{padding:14px}.stats{grid-template-columns:1fr 1fr}.tw{overflow-x:auto}.bt{font-size:.8rem}.bt th,.bt td{padding:10px 12px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lc">
+    <div class="lc-logo">🦷</div>
+    <h1>Vidya Dental</h1>
+    <div class="lc-sub">Admin Portal · Chikkamagaluru</div>
+    <input type="password" id="pwInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="lc-btn" onclick="doLogin()">Sign In</button>
+    <div class="lc-err" id="lErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen">
+  <header>
+    <div class="hb">
+      <div class="hlogo">🦷</div>
+      <div>
+        <div class="htitle">Vidya Dental Admin</div>
+        <div class="hsub">Dr. Hero · Chikkamagaluru</div>
+      </div>
+    </div>
+    <div class="hr-btns">
+      <button class="rbtn" onclick="loadBookings()">↻ Refresh</button>
+      <button class="lbtn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="stats">
+      <div class="sc all"><div class="sc-num" id="s-all">–</div><div class="sc-lbl">Total Bookings</div></div>
+      <div class="sc pending"><div class="sc-num" id="s-pend">–</div><div class="sc-lbl">Pending</div></div>
+      <div class="sc accepted"><div class="sc-num" id="s-acc">–</div><div class="sc-lbl">Accepted</div></div>
+      <div class="sc rejected"><div class="sc-num" id="s-rej">–</div><div class="sc-lbl">Rejected</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="ttitle">All Appointments</div>
+      <button class="fb active" onclick="setFilter('all',this)">All</button>
+      <button class="fb" onclick="setFilter('pending',this)">Pending</button>
+      <button class="fb" onclick="setFilter('accepted',this)">Accepted</button>
+      <button class="fb" onclick="setFilter('rejected',this)">Rejected</button>
+      <input class="si" type="text" id="srch" placeholder="Search patient name or phone…" oninput="render()"/>
+    </div>
+    <div class="tw" id="tableArea"></div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://nabtjghfueuhxwppngli.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hYnRqZ2hmdWV1aHh3cHBuZ2xpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjM5ODYsImV4cCI6MjA5MDE5OTk4Nn0.iPXj6chvUOJeuKHqGsgvWl0Da_My7lzb0dhgW0rnbUs';
+const ADMIN_PW = 'Spetwiky123';
+const {createClient} = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let bookings = [], filter = 'all';
+
+function doLogin(){
+  const v = document.getElementById('pwInput').value;
+  if(v === ADMIN_PW){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminScreen').style.display='block';
+    loadBookings();
+  } else {
+    document.getElementById('lErr').textContent='Incorrect password. Please try again.';
+    document.getElementById('pwInput').value='';
+  }
+}
+
+function doLogout(){
+  document.getElementById('adminScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+  document.getElementById('lErr').textContent='';
+  bookings=[];
+}
+
+function toast(msg, bg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=bg||'#0f1923';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+async function loadBookings(){
+  document.getElementById('tableArea').innerHTML='<div class="loading">Loading appointments…</div>';
+  const {data,error} = await sb.from('bookings').select('*').order('created_at',{ascending:false});
+  if(error){
+    document.getElementById('tableArea').innerHTML=`<div class="empty"><div class="ei">✕</div><h3>Could not load bookings</h3><p>${error.message}</p></div>`;
+    return;
+  }
+  bookings = data||[];
+  updateStats(); render();
+}
+
+function updateStats(){
+  document.getElementById('s-all').textContent = bookings.length;
+  document.getElementById('s-pend').textContent = bookings.filter(b=>b.status==='pending').length;
+  document.getElementById('s-acc').textContent = bookings.filter(b=>b.status==='accepted').length;
+  document.getElementById('s-rej').textContent = bookings.filter(b=>b.status==='rejected').length;
+}
+
+function setFilter(f,el){
+  filter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); render();
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function render(){
+  const q = document.getElementById('srch').value.toLowerCase();
+  const rows = bookings.filter(b=>{
+    const mf = filter==='all'||b.status===filter;
+    const ms = !q||b.name.toLowerCase().includes(q)||b.phone.includes(q);
+    return mf&&ms;
+  });
+  const area = document.getElementById('tableArea');
+  if(!rows.length){
+    area.innerHTML='<div class="empty"><div class="ei">📋</div><h3>No appointments found</h3><p>No bookings match the current filter.</p></div>';
+    return;
+  }
+  const badgeClass = s => s==='pending'?'bp':s==='accepted'?'ba':'br';
+  area.innerHTML=`<table class="bt">
+    <thead><tr>
+      <th>#</th><th>Patient</th><th>Date & Time</th><th>Reason</th><th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${rows.map((b,i)=>`
+      <tr id="row-${b.id}">
+        <td style="color:var(--muted);font-size:.78rem">${i+1}</td>
+        <td><div class="pname">${esc(b.name)}</div><div class="pphone">📞 ${esc(b.phone)}</div></td>
+        <td><div class="dchip">📅 ${b.date||'–'}</div><div class="tchip">🕐 ${esc(b.time||'–')}</div></td>
+        <td><div class="rtxt" title="${esc(b.reason||'')}">${esc(b.reason)||'—'}</div></td>
+        <td><span class="badge ${badgeClass(b.status)}">${b.status}</span></td>
+        <td><div class="actions">
+          <button class="ab accept" onclick="upd('${b.id}','accepted')" ${b.status==='accepted'?'disabled':''}>✓ Accept</button>
+          <button class="ab reject" onclick="upd('${b.id}','rejected')" ${b.status==='rejected'?'disabled':''}>✕ Reject</button>
+          <button class="ab del" onclick="del('${b.id}')">🗑 Delete</button>
+        </div></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function upd(id,status){
+  const {error} = await sb.from('bookings').update({status}).eq('id',id);
+  if(error){toast('Failed: '+error.message,'#dc2626');return}
+  const i=bookings.findIndex(b=>b.id===id);
+  if(i!==-1) bookings[i].status=status;
+  updateStats(); render();
+  toast(status==='accepted'?'✓ Booking accepted':'✕ Booking rejected', status==='accepted'?'#16a34a':'#dc2626');
+}
+
+async function del(id){
+  if(!confirm('Delete this booking permanently?')) return;
+  const {error} = await sb.from('bookings').delete().eq('id',id);
+  if(error){toast('Delete failed: '+error.message,'#dc2626');return}
+  bookings=bookings.filter(b=>b.id!==id);
+  updateStats(); render();
+  toast('Booking deleted','#6b7280');
+}
+</script>
+</body>
+</html>
